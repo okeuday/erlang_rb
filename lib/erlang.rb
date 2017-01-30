@@ -40,6 +40,8 @@
 
 require 'zlib'
 
+# Erlang term classes listed alphabetically
+
 module Erlang
 
     class OtpErlangAtom
@@ -89,51 +91,6 @@ module Erlang
         alias eql? ==
     end
     
-    class OtpErlangList
-        def initialize(value, improper = false)
-            @value = value
-            @improper = improper
-        end
-        attr_reader :value
-        attr_reader :improper
-        def binary
-            if @value.kind_of?(Array)
-                length = @value.length
-                if length == 0
-                    return TAG_NIL_EXT.chr
-                elsif length > 4294967295
-                    raise OutputException, 'uint32 overflow', caller
-                elsif @improper
-                    length_packed = [length - 1].pack('N')
-                    list_packed = @value.map{ |element|
-                        Erlang::term_to_binary_(element)
-                    }.join
-                    return "#{TAG_LIST_EXT.chr}#{length_packed}#{list_packed}"
-                else
-                    length_packed = [length].pack('N')
-                    list_packed = @value.map{ |element|
-                        Erlang::term_to_binary_(element)
-                    }.join
-                    return "#{TAG_LIST_EXT.chr}#{length_packed}" \
-                           "#{list_packed}#{TAG_NIL_EXT.chr}"
-                end
-            else
-                raise OutputException, 'unknown list type', caller
-            end
-        end
-        def to_s
-            return "#{self.class.name}" \
-                   "(#{@value.to_s},improper=#{@improper.to_s})"
-        end
-        def hash
-            return binary.hash
-        end
-        def ==(other)
-            return binary == other.binary
-        end
-        alias eql? ==
-    end
-
     class OtpErlangBinary
         def initialize(value, bits = 8)
             @value = value
@@ -192,31 +149,70 @@ module Erlang
         alias eql? ==
     end
     
-    class OtpErlangReference
-        def initialize(node, id, creation)
-            @node = node
-            @id = id
-            @creation = creation
+    class OtpErlangList
+        def initialize(value, improper = false)
+            @value = value
+            @improper = improper
         end
-        attr_reader :node
-        attr_reader :id
-        attr_reader :creation
+        attr_reader :value
+        attr_reader :improper
         def binary
-            length = @id.bytesize / 4
-            if length == 0
-                return "#{TAG_REFERENCE_EXT.chr}" \
-                       "#{@node.binary}#{@id}#{@creation}"
-            elsif length <= 65535
-                length_packed = [length].pack('n')
-                return "#{TAG_NEW_REFERENCE_EXT.chr}#{length_packed}" \
-                       "#{@node.binary}#{@creation}#{@id}"
+            if @value.kind_of?(Array)
+                length = @value.length
+                if length == 0
+                    return TAG_NIL_EXT.chr
+                elsif length > 4294967295
+                    raise OutputException, 'uint32 overflow', caller
+                elsif @improper
+                    length_packed = [length - 1].pack('N')
+                    list_packed = @value.map{ |element|
+                        Erlang::term_to_binary_(element)
+                    }.join
+                    return "#{TAG_LIST_EXT.chr}#{length_packed}#{list_packed}"
+                else
+                    length_packed = [length].pack('N')
+                    list_packed = @value.map{ |element|
+                        Erlang::term_to_binary_(element)
+                    }.join
+                    return "#{TAG_LIST_EXT.chr}#{length_packed}" \
+                           "#{list_packed}#{TAG_NIL_EXT.chr}"
+                end
             else
-                raise OutputException, 'uint16 overflow', caller
+                raise OutputException, 'unknown list type', caller
             end
         end
         def to_s
             return "#{self.class.name}" \
-                   "('#{@node.to_s}','#{@id.to_s}','#{@creation.to_s}')"
+                   "(#{@value.to_s},improper=#{@improper.to_s})"
+        end
+        def hash
+            return binary.hash
+        end
+        def ==(other)
+            return binary == other.binary
+        end
+        alias eql? ==
+    end
+
+    class OtpErlangPid
+        def initialize(node, id, serial, creation)
+            @node = node
+            @id = id
+            @serial = serial
+            @creation = creation
+        end
+        attr_reader :node
+        attr_reader :id
+        attr_reader :serial
+        attr_reader :creation
+        def binary
+            return "#{TAG_PID_EXT.chr}" \
+                   "#{@node.binary}#{@id}#{@serial}#{@creation}"
+        end
+        def to_s
+            return "#{self.class.name}" \
+                   "('#{@node.to_s}','#{@id.to_s}','#{@serial.to_s}'," \
+                    "'#{@creation.to_s}')"
         end
         def hash
             return binary.hash
@@ -252,25 +248,31 @@ module Erlang
         alias eql? ==
     end
     
-    class OtpErlangPid
-        def initialize(node, id, serial, creation)
+    class OtpErlangReference
+        def initialize(node, id, creation)
             @node = node
             @id = id
-            @serial = serial
             @creation = creation
         end
         attr_reader :node
         attr_reader :id
-        attr_reader :serial
         attr_reader :creation
         def binary
-            return "#{TAG_PID_EXT.chr}" \
-                   "#{@node.binary}#{@id}#{@serial}#{@creation}"
+            length = @id.bytesize / 4
+            if length == 0
+                return "#{TAG_REFERENCE_EXT.chr}" \
+                       "#{@node.binary}#{@id}#{@creation}"
+            elsif length <= 65535
+                length_packed = [length].pack('n')
+                return "#{TAG_NEW_REFERENCE_EXT.chr}#{length_packed}" \
+                       "#{@node.binary}#{@creation}#{@id}"
+            else
+                raise OutputException, 'uint16 overflow', caller
+            end
         end
         def to_s
             return "#{self.class.name}" \
-                   "('#{@node.to_s}','#{@id.to_s}','#{@serial.to_s}'," \
-                    "'#{@creation.to_s}')"
+                   "('#{@node.to_s}','#{@id.to_s}','#{@creation.to_s}')"
         end
         def hash
             return binary.hash
@@ -318,19 +320,18 @@ module Erlang
             data_compressed = Zlib::Deflate.deflate(data_uncompressed,
                                                     compressed)
             size_uncompressed = data_uncompressed.bytesize
-            if size_uncompressed <= 4294967295
-                size_uncompressed_packed = [size_uncompressed].pack('N')
-                return "#{TAG_VERSION.chr}#{TAG_COMPRESSED_ZLIB.chr}" \
-                       "#{size_uncompressed_packed}#{data_compressed}"
-            else
+            if size_uncompressed > 4294967295
                 raise OutputException, 'uint32 overflow', caller
             end
+            size_uncompressed_packed = [size_uncompressed].pack('N')
+            return "#{TAG_VERSION.chr}#{TAG_COMPRESSED_ZLIB.chr}" \
+                   "#{size_uncompressed_packed}#{data_compressed}"
         end
     end
     
     private
     
-    # binary_to_term
+    # binary_to_term implementation functions
     
     def self.binary_to_term_(i, data)
         tag = data[i].ord
@@ -559,6 +560,8 @@ module Erlang
         end
         return [i, sequence]
     end
+
+    # (binary_to_term Erlang term primitive type functions)
             
     def self.binary_to_integer(i, data)
         tag = data[i].ord
@@ -630,7 +633,7 @@ module Erlang
         end
     end
     
-    # term_to_binary
+    # term_to_binary implementation functions
     
     def self.term_to_binary_(term)
         if term.kind_of?(String)
@@ -671,6 +674,8 @@ module Erlang
             raise OutputException, 'unknown ruby type', caller
         end
     end
+
+    # (term_to_binary Erlang term composite type functions)
     
     def self.string_to_binary(term)
         length = term.bytesize
@@ -706,6 +711,23 @@ module Erlang
         end
     end
     
+    def self.hash_to_binary(term)
+        length = term.length
+        if length <= 4294967295
+            term_packed = term.to_a.map{ |element|
+                key_packed = term_to_binary_(element[0])
+                value_packed = term_to_binary_(element[1])
+                "#{key_packed}#{value_packed}"
+            }.join
+            length_packed = [length].pack('N')
+            return "#{TAG_MAP_EXT.chr}#{length_packed}#{term_packed}"
+        else
+            raise OutputException, 'uint32 overflow', caller
+        end
+    end
+
+    # (term_to_binary Erlang term primitive type functions)
+
     def self.integer_to_binary(term)
         if 0 <= term and term <= 255
             return "#{TAG_SMALL_INTEGER_EXT.chr}#{term.chr}"
@@ -745,25 +767,7 @@ module Erlang
         return "#{TAG_NEW_FLOAT_EXT.chr}#{term_packed}"
     end
 
-    def self.hash_to_binary(term)
-        length = term.length
-        if length <= 4294967295
-            term_packed = term.to_a.map{ |element|
-                key_packed = term_to_binary_(element[0])
-                value_packed = term_to_binary_(element[1])
-                "#{key_packed}#{value_packed}"
-            }.join
-            length_packed = [length].pack('N')
-            return "#{TAG_MAP_EXT.chr}#{length_packed}#{term_packed}"
-        else
-            raise OutputException, 'uint32 overflow', caller
-        end
-    end
-
-    # exceptions
-    
-    class ParseException < SyntaxError
-    end
+    # Exception classes listed alphabetically
     
     class InputException < ArgumentError
     end
@@ -771,6 +775,9 @@ module Erlang
     class OutputException < TypeError
     end
 
+    class ParseException < SyntaxError
+    end
+    
     # tag values here http://www.erlang.org/doc/apps/erts/erl_ext_dist.html
     TAG_VERSION = 131
     TAG_COMPRESSED_ZLIB = 80
