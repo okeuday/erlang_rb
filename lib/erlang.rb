@@ -282,6 +282,8 @@ module Erlang
         end
         alias eql? ==
     end
+
+    # core functionality
     
     def self.binary_to_term(data)
         length = data.bytesize
