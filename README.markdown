@@ -8,3 +8,9 @@ Provides all encoding and decoding for the Erlang Binary Term Format
 in a single Ruby module.
 
 Available as a [Ruby gem at `https://rubygems.org/gems/erlang_rb`](https://rubygems.org/gems/erlang_rb).
+
+Tests
+-----
+
+    rake test
+
