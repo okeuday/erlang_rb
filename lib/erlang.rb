@@ -286,8 +286,8 @@ module Erlang
     # core functionality
     
     def self.binary_to_term(data)
-        length = data.bytesize
-        if length <= 1
+        size = data.bytesize
+        if size <= 1
             raise ParseException, 'null input', caller
         end
         if data[0].ord != TAG_VERSION
@@ -295,7 +295,7 @@ module Erlang
         end
         begin
             result = binary_to_term_(1, data)
-            if result[0] != length
+            if result[0] != size
                 raise ParseException, 'unparsed data', caller
             end
             return result[1]
