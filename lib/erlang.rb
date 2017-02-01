@@ -457,7 +457,7 @@ module Erlang
                 raise ParseException, 'invalid small integer tag', caller
             end
             i += 1
-            length = data[i].ord
+            arity = data[i].ord
             i += 1
             return [i, OtpErlangFunction.new(tag, data[old_i,i - old_i])]
         elsif tag == TAG_NEW_REFERENCE_EXT
