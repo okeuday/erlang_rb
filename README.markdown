@@ -14,3 +14,13 @@ Tests
 
     rake test
 
+Author
+------
+
+Michael Truog (mjtruog [at] gmail (dot) com)
+
+License
+-------
+
+MIT License
+

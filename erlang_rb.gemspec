@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
     s.date        = '2017-03-28'
     s.summary     = 'Erlang'
     s.description = 'Erlang Binary Term Format for Ruby'
-    s.license     = 'BSD'
+    s.license     = 'MIT'
     s.authors     = ['Michael Truog']
     s.email       = 'mjtruog@gmail.com'
     s.homepage    = 'https://github.com/okeuday/erlang_rb'
