@@ -4,7 +4,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2014-2017 Michael Truog <mjtruog at gmail dot com>
+# Copyright (c) 2014-2018 Michael Truog <mjtruog at gmail dot com>
 # Copyright (c) 2009-2013 Dmitry Vasiliev <dima@hlabs.org>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -524,9 +524,10 @@ class EncodeTestCase < Test::Unit::TestCase
         assert_equal("\x83k\0\4test",
                      Erlang::term_to_binary('test'))
     end
-    def test_term_to_binary_boolean
+    def test_term_to_binary_predefined_atom
         assert_equal("\x83s\4true", Erlang::term_to_binary(true))
         assert_equal("\x83s\5false", Erlang::term_to_binary(false))
+        assert_equal("\x83s\x09undefined", Erlang::term_to_binary(nil))
     end
     def test_term_to_binary_short_integer
         assert_equal("\x83a\0", Erlang::term_to_binary(0))
