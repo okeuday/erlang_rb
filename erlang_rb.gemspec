@@ -2,8 +2,8 @@
 # ex: set ft=ruby fenc=utf-8 sts=4 ts=4 sw=4 et:
 Gem::Specification.new do |s|
     s.name        = 'erlang_rb'
-    s.version     = '1.7.2'
-    s.date        = '2017-09-12'
+    s.version     = '1.7.3'
+    s.date        = '2018-02-26'
     s.summary     = 'Erlang'
     s.description = 'Erlang Binary Term Format for Ruby'
     s.license     = 'MIT'
