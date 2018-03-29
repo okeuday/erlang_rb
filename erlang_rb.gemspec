@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
     s.description = 'Erlang Binary Term Format for Ruby'
     s.license     = 'MIT'
     s.authors     = ['Michael Truog']
-    s.email       = 'mjtruog@gmail.com'
+    s.email       = 'mjtruog@protonmail.com'
     s.homepage    = 'https://github.com/okeuday/erlang_rb'
     s.cert_chain  = ['certs/okeuday.pem']
     s.signing_key = File.expand_path('~/.ssh/gem-private_key.pem') if $0 =~ /gem\z/
