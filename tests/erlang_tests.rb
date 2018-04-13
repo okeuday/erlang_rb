@@ -70,7 +70,7 @@ end
 
 class ImproperListTestCase < Test::Unit::TestCase
     def test_improper_list
-        lst = Erlang::OtpErlangList.new([1, 2, 3, 4], improper=true)
+        lst = Erlang::OtpErlangList.new([1, 2, 3, 4], true)
         assert(lst.kind_of?(Erlang::OtpErlangList))
         assert_equal(Erlang::OtpErlangList.new([1, 2, 3, 4]).value, lst.value)
         assert_equal(4, lst.value[-1])
@@ -89,7 +89,7 @@ class ImproperListTestCase < Test::Unit::TestCase
     end
     def test_errors
         assert_raise(Erlang::OutputException){
-            Erlang::OtpErlangList.new('invalid', improper=true).binary
+            Erlang::OtpErlangList.new('invalid', true).binary
         }
     end
 end
