@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
     s.version     = '2.0.4'
     s.date        = '2021-12-04'
     s.summary     = 'Erlang'
-    s.description = 'Erlang Binary Term Format for Ruby'
+    s.description = 'Erlang External Term Format for Ruby'
     s.license     = 'MIT'
     s.authors     = ['Michael Truog']
     s.email       = 'mjtruog@protonmail.com'
