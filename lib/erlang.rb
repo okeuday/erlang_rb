@@ -31,7 +31,7 @@ require 'set'
 
 module Erlang
 
-    UNDEFINED = 'undefined' # Elixir use can set to 'nil'
+    @@UNDEFINED = 'undefined' # Change with set_undefined
 
     class OtpErlangAtom
         def initialize(value)
@@ -347,6 +347,11 @@ module Erlang
         end
     end
 
+    # Elixir use can set to 'nil'
+    def self.set_undefined(value)
+        @@UNDEFINED = value
+    end
+
     private
 
     # binary_to_term implementation functions
@@ -527,7 +532,7 @@ module Erlang
                 return [i, true]
             elsif atom_name == 'false'
                 return [i, false]
-            elsif atom_name == UNDEFINED
+            elsif atom_name == @@UNDEFINED
                 return [i, nil]
             else
                 if tag == TAG_ATOM_UTF8_EXT
@@ -555,7 +560,7 @@ module Erlang
                 return [i, true]
             elsif atom_name == 'false'
                 return [i, false]
-            elsif atom_name == UNDEFINED
+            elsif atom_name == @@UNDEFINED
                 return [i, nil]
             else
                 if tag == TAG_SMALL_ATOM_UTF8_EXT
@@ -714,7 +719,7 @@ module Erlang
             ).binary
         elsif term.nil?
             return OtpErlangAtom.new(
-                UNDEFINED.force_encoding('UTF-8')
+                @@UNDEFINED.force_encoding('UTF-8')
             ).binary
         elsif term.kind_of?(OtpErlangAtom)
             return term.binary
